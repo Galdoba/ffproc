@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Galdoba/ffproc/cmd/procman/commands"
+	"github.com/Galdoba/ffproc/configs"
 	"github.com/urfave/cli/v2"
 )
 
@@ -12,12 +13,10 @@ func StartProcman() *cli.App {
 	app.Usage = "manager for processing media files"
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:        "config",
+			Name:        "use-config",
 			Category:    "",
-			DefaultText: co,
+			DefaultText: configs.ConfigPath(programName),
 			Usage:       "non-default config file",
-
-			Value:       "",
 			Destination: new(string),
 		},
 	}

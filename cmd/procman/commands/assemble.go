@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"sort"
@@ -9,10 +10,9 @@ import (
 	"github.com/Galdoba/ffproc/internal/pkg/sourcefiles"
 	"github.com/Galdoba/ffproc/pkg/survey"
 	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v3"
 )
 
-var cfg configs.Procman
+var cfg *configs.Procman
 
 func Assemble() *cli.Command {
 	cm := cli.Command{
@@ -27,16 +27,24 @@ func Assemble() *cli.Command {
 		BashComplete: func(*cli.Context) {
 		},
 		Before: func(c *cli.Context) error {
-
+			cfg = &configs.Procman{}
 			cfgPath := configs.ConfigPath(c.App.Name, "dev")
+			// cfg.Link = "LLL"
+			// cfg.Path = "PPP"
+			// bt, _ := json.MarshalIndent(cfg, "", "  ")
+			// fmt.Println(string(bt))
+			// fmt.Println(cfgPath)
 			bt, err := os.ReadFile(cfgPath)
+			//			fmt.Println(string(bt))
 			if err != nil {
 				return fmt.Errorf("read config failed: %v", err)
 			}
-			err = yaml.Unmarshal(bt, cfg)
+
+			err = json.Unmarshal(bt, cfg)
 			if err != nil {
 				return fmt.Errorf("unmarshal config failed: %v", err)
 			}
+			fmt.Println(cfg)
 			return nil
 		},
 		After: func(*cli.Context) error {

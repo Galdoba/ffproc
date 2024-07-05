@@ -16,9 +16,9 @@ const (
 )
 
 func main() {
-
-	app := Setup()
+	app := StartProcman()
 	args := os.Args
+
 	if err := app.Run(args); err != nil {
 		errOut := fmt.Sprintf("%v error: %v", programName, err.Error())
 		println(errOut)
