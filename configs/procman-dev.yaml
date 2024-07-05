@@ -1,0 +1,4 @@
+#dev config for procman
+Table Data Link          : https://docs.google.com/spreadsheets/d/1Waa58usrgEal2Da6tyayaowiWujpm0rzd06P5ASYlsg/edit?gid=250314867#gid=250314867
+Table Data File          : ${HOME}\.ffproc\db\db.csv
+Ticket Storage Directory : ${HOME}\.ffproc\tickets\
