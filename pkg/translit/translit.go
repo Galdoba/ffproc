@@ -5,9 +5,13 @@ import "strings"
 type Option string
 
 var Title Option = "Title"
+var KeepRegister Option = "Keep Register"
 
 func Process(origin string, opts ...Option) string {
 	result := ""
+	if !haveOption(KeepRegister, opts) {
+		origin = strings.ToLower(origin)
+	}
 	glyphs := strings.Split(origin, "")
 	for _, gl := range glyphs {
 		result += change(gl)
@@ -43,7 +47,6 @@ func haveOption(opt Option, pool []Option) bool {
 }
 
 func change(a string) string {
-	a = strings.ToLower(a)
 	switch a {
 	default:
 		return "_"
@@ -83,6 +86,43 @@ func change(a string) string {
 			"э": "e",
 			"ю": "yu",
 			"я": "ya"}
+		return lMap[a]
+	case "А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ы", "Ь", "Э", "Ю", "Я":
+		lMap := make(map[string]string)
+		lMap = map[string]string{
+			"А": "A",
+			"Б": "B",
+			"В": "V",
+			"Г": "G",
+			"Д": "D",
+			"Е": "E",
+			"Ё": "E",
+			"Ж": "ZH",
+			"З": "Z",
+			"И": "I",
+			"Й": "Y",
+			"К": "K",
+			"Л": "L",
+			"М": "M",
+			"Н": "N",
+			"О": "O",
+			"П": "P",
+			"Р": "R",
+			"С": "S",
+			"Т": "T",
+			"У": "U",
+			"Ф": "F",
+			"Х": "H",
+			"Ц": "C",
+			"Ч": "CH",
+			"Ш": "SH",
+			"Щ": "SH",
+			"Ъ": "",
+			"Ы": "Y",
+			"Ь": "",
+			"Э": "E",
+			"Ю": "YU",
+			"Я": "YA"}
 		return lMap[a]
 	case "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", `/`, `\`:
 		return a

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Galdoba/ffstuff/pkg/translit"
+	"github.com/Galdoba/ffproc/pkg/translit"
 )
 
 type TableData struct {
@@ -14,6 +14,7 @@ type TableData struct {
 
 type Entry struct {
 	ID                 string
+	RowNum             int
 	Comment            string
 	EditPath           string
 	TrailerExpected    bool
@@ -84,6 +85,12 @@ func NewEntry(dest string, data []string) Entry {
 
 }
 
+func Key(e Entry) string {
+	kparts := strings.Split(e.ID, ":")
+	key := translit.Process(kparts[1], translit.Title)
+	return key
+}
+
 type Data interface {
 	Data() [][]string
 }
@@ -101,6 +108,7 @@ func CompileTableData(dt Data) (*TableData, error) {
 			dest = row[8]
 		}
 		entry := NewEntry(dest, row)
+		entry.RowNum = i
 		if entry.ID == "" {
 			continue
 		}
@@ -128,7 +136,7 @@ func CompileTableData(dt Data) (*TableData, error) {
 }
 
 func processTypeOf(entry Entry) string {
-	keytr := translit.TransliterateLower(entry.ID)
+	keytr := translit.Process(entry.ID)
 	if strings.Contains(keytr, "_sezon") {
 		return "SER"
 	}
@@ -136,14 +144,14 @@ func processTypeOf(entry Entry) string {
 }
 
 func seasonOf(entry Entry) string {
-	keytr := translit.TransliterateLower(entry.ID)
+	keytr := translit.Process(entry.ID)
 	parts := strings.Split(keytr, "_sezon")
 	words := strings.Split(parts[0], "_")
 	return words[len(words)-1]
 }
 
 func destinationSerial(entry Entry) string {
-	keytr := translit.TransliterateAsIs(entry.ID)
+	keytr := translit.Process(entry.ID, translit.Title)
 	parts := strings.Split(keytr, "_sezon")
 	words := strings.Split(parts[0], "_")
 	words[len(words)-1] = "s" + words[len(words)-1]
@@ -151,7 +159,8 @@ func destinationSerial(entry Entry) string {
 	baseSpl := strings.Split(base, "")
 	baseSpl[0] = strings.ToUpper(baseSpl[0])
 	base = strings.Join(baseSpl, "")
-	agent := strings.TrimSuffix("_"+translit.TransliterateLower(entry.Agent), "_")
+	agent := strings.TrimSuffix("_"+translit.Process(entry.Agent), "_")
+	agent = strings.TrimSuffix("_"+translit.Process(entry.Agent), "_")
 	dest := agent + "/" + base + "/"
 	return dest
 }
@@ -163,7 +172,7 @@ func destinationFilm(entry Entry) string {
 		dest := strings.TrimPrefix(date[2], "20") + "_" + date[1] + "_" + date[0] + "/"
 		return dest
 	default:
-		return strings.TrimSuffix("_"+translit.TransliterateLower(entry.Agent), "_")
+		return strings.TrimSuffix("_"+translit.Process(entry.Agent), "_")
 	}
 }
 

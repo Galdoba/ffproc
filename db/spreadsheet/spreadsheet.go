@@ -59,6 +59,17 @@ func (sp *sheet) CurlUpdate(url string) error {
 	if err := os.Rename(newPath, oldPath); err != nil {
 		return fmt.Errorf("error saving file: %v", err)
 	}
+	bt, err := os.ReadFile(sp.path)
+	if err != nil {
+		return fmt.Errorf("can't read %v", sp.path)
+	}
+	container, err := csvp.FromString(string(bt))
+	if err != nil {
+		return fmt.Errorf("can't convert csv %v", sp.path)
+	}
+	for _, entries := range container.Entries() {
+		sp.cells = append(sp.cells, entries.Fields())
+	}
 	return nil
 }
 

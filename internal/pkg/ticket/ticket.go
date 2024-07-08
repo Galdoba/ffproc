@@ -1,7 +1,10 @@
 package ticket
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Galdoba/ffproc/internal/pkg/define"
@@ -45,9 +48,11 @@ func New(name, tType string) *Ticket {
 	return &tk
 }
 
+var SourceExists error = errors.New("source exists")
+
 func (tk *Ticket) AddSource(source, mfdata string) error {
 	if _, ok := tk.Info_Tags[source]; ok {
-		return fmt.Errorf("source '%v' exists", source)
+		return SourceExists
 	}
 	tk.Info_Tags[source] = make(map[string]string)
 	tk.Info_Tags[source][SOURCE_DATA] = mfdata
@@ -61,9 +66,10 @@ func (tk *Ticket) AddTag(source, key, val string) error {
 		return fmt.Errorf("source '%v' was not added", source)
 	}
 	sourcemap := tk.Info_Tags[source]
-
-	if _, ok := sourcemap[key]; ok {
-		return fmt.Errorf("tag '%v' for source '%v' exists", key, source)
+	if val, ok := sourcemap[key]; ok {
+		if val != "" {
+			return fmt.Errorf("tag '%v' for source '%v' exists", key, source)
+		}
 	}
 	tk.Info_Tags[source][key] = val
 	return nil
@@ -77,8 +83,10 @@ func (tk *Ticket) AddRequest(key, val string) error {
 	}
 	requestmap := tk.Info_Tags[PROCESS_REQUEST]
 
-	if _, ok := requestmap[key]; ok {
-		return fmt.Errorf("request '%v' exists", key)
+	if val, ok := requestmap[key]; ok {
+		if val != "" {
+			return fmt.Errorf("request '%v' exists", key)
+		}
 	}
 	tk.Info_Tags[PROCESS_REQUEST][key] = val
 	return nil
@@ -151,4 +159,48 @@ func (pv *pseudoValidator) ValidateArchivePath(s string) bool {
 }
 func (pv *pseudoValidator) ValidateEpisodes(s string) bool {
 	return true
+}
+
+var NoTicket error = errors.New("ticket not found")
+
+func Load(path string) (*Ticket, error) {
+	_, err := os.Stat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, NoTicket
+	}
+	bt, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("can't read file: %v", err)
+	}
+	tk := &Ticket{}
+	if err := json.Unmarshal(bt, tk); err != nil {
+		return nil, fmt.Errorf("can't unmarshal: %v", err)
+	}
+	return tk, nil
+}
+
+func Save(tk *Ticket, dir string) error {
+	fi, err := os.Stat(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("dir not found: %v", dir)
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("not a directory: %v", dir)
+	}
+	bt, err := json.MarshalIndent(tk, "", "  ")
+	if err != nil {
+		return fmt.Errorf("can't marshal %v: %v", tk.Name, err)
+	}
+	filepath := dir + tk.Name + "--" + tk.TicketType + ".json"
+	f, err := os.OpenFile(filepath, os.O_CREATE|os.O_RDWR, 0777)
+	if err != nil {
+		return fmt.Errorf("can't open %v: %v", filepath, err)
+	}
+	if err := f.Truncate(0); err != nil {
+		return fmt.Errorf("can't truncate %v: %v", filepath, err)
+	}
+	if _, err := f.Write(bt); err != nil {
+		return fmt.Errorf("can't write %v: %v", filepath, err)
+	}
+	return nil
 }

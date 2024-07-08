@@ -5,9 +5,15 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/Galdoba/ffproc/configs"
+	"github.com/Galdoba/ffproc/db/spreadsheet"
+	"github.com/Galdoba/ffproc/internal/bridge"
+	"github.com/Galdoba/ffproc/internal/pkg/process"
 	"github.com/Galdoba/ffproc/internal/pkg/sourcefiles"
+	"github.com/Galdoba/ffproc/internal/pkg/table"
+	"github.com/Galdoba/ffproc/internal/pkg/ticket"
 	"github.com/Galdoba/ffproc/pkg/survey"
 	"github.com/urfave/cli/v2"
 )
@@ -29,13 +35,14 @@ func Assemble() *cli.Command {
 		Before: func(c *cli.Context) error {
 			cfg = &configs.Procman{}
 			cfgPath := configs.ConfigPath(c.App.Name, "dev")
-			// cfg.Link = "LLL"
-			// cfg.Path = "PPP"
+			// cfg.Link = "https://docs.google.com/spreadsheets/d/1Waa58usrgEal2Da6tyayaowiWujpm0rzd06P5ASYlsg/edit?gid=250314867#gid=250314867"
+			// cfg.Path = "c:/Users/pemaltynov/.galdoba/ffproc/db/db.csv"
+			// cfg.TicketStorage = "c:/Users/pemaltynov/.galdoba/ffproc/tickets/"
 			// bt, _ := json.MarshalIndent(cfg, "", "  ")
 			// fmt.Println(string(bt))
 			// fmt.Println(cfgPath)
 			bt, err := os.ReadFile(cfgPath)
-			//			fmt.Println(string(bt))
+			// fmt.Println(string(bt))
 			if err != nil {
 				return fmt.Errorf("read config failed: %v", err)
 			}
@@ -62,14 +69,65 @@ func Assemble() *cli.Command {
 			if err != nil {
 				return err
 			}
+			////////////
+			fmt.Println("update tabledata...")
+			// fmt.Println(cfg)
+			db, err := spreadsheet.New(cfg.Path)
+			if err != nil {
+				return fmt.Errorf("db.New: %v", err)
+			}
+			if err := db.CurlUpdate(cfg.Link); err != nil {
+				return fmt.Errorf("db.Update: %v", err)
+			}
+			tableCompiled, err := table.CompileTableData(db)
+			if err != nil {
+				return err
+			}
+			///////////////////
+			fmt.Println("define source projects...")
 			projects := sourcefiles.SplitByKeys(sources)
-			for k, v := range projects {
-				fmt.Println(k, ":")
-				for _, src := range v {
-					fmt.Println(" ", src)
+			fmt.Println("connect source projects with table...")
+			processList := process.New()
+			for projectKey, projData := range projects {
+				for _, tableData := range tableCompiled.Entries {
+
+					if commonKey(projectKey, table.Key(tableData)) == "" {
+						continue
+					}
+					if sourcefiles.ProcessType(projData) != tableData.ProcessType {
+						continue
+					}
+
+					br := bridge.New(tableData, projData)
+
+					fmt.Println("create ticket")
+					tkName := tableData.ProcessType + "--" + projectKey
+					fmt.Println("create ticket", tkName)
+					tkPath := cfg.TicketStorage + tkName + ".json"
+					tk, err := ticket.Load(tkPath)
+					switch err {
+					case ticket.NoTicket:
+						tk = ticket.New(projectKey, tableData.ProcessType)
+					case nil:
+						fmt.Println("load existing:", tkPath)
+					default:
+						return fmt.Errorf("ticket.Load: %v", err)
+					}
+					ticket.Save(tk, cfg.TicketStorage)
+					// if err := ticket.Save(tk, cfg.TicketStorage); err != nil {
+					// 	fmt.Printf("error Save Ticket: %v")
+					// }
+
+					// fmt.Println("----")
+					// fmt.Println("PROCESS TICKET:")
+					// fmt.Println(tk, br)
+					if err := processList.AddProject(tk, br, tkPath); err != nil {
+						return fmt.Errorf("AddProject: %v", err)
+					}
 				}
 			}
-
+			fmt.Println("---------------")
+			fmt.Println(processList)
 			// db, err := spreadsheet.New("path")
 			// if err != nil {
 			// 	return err
@@ -106,4 +164,11 @@ func Assemble() *cli.Command {
 		CustomHelpTemplate:     "",
 	}
 	return &cm
+}
+
+func commonKey(projectKey, tableKey string) string {
+	if strings.HasPrefix(tableKey, projectKey) {
+		return projectKey
+	}
+	return ""
 }

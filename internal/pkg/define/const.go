@@ -6,6 +6,7 @@ const (
 	PROJ_TYPE_TRL    = "TRL"
 	TAG_PROJ_TYPE    = "project_type"
 	TAG_PROJ_EPISODE = "episode"
+	TAG_PROJ_SEASON  = "season"
 	TAG_PROJ_BASE    = "project_base"
 )
 

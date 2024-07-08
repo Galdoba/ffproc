@@ -53,6 +53,7 @@ func NewSource(name string) *Sourcefile {
 				source.Tags[define.TAG_PROJ_TYPE] = tag
 			case isEpisodeTag(tag):
 				source.Tags[define.TAG_PROJ_EPISODE] = tag
+				source.Tags[define.TAG_PROJ_SEASON] = strings.Split(tag, "e")[0]
 			case tag == source.Name:
 			default:
 				source.Tags[define.TAG_PROJ_BASE] = tag
@@ -131,14 +132,28 @@ func isEpisodeTag(tag string) bool {
 func SplitByKeys(sources []*Sourcefile) map[string][]*Sourcefile {
 	output := make(map[string][]*Sourcefile)
 	for _, src := range sources {
-		key := src.Tags[define.TAG_PROJ_TYPE] + "--"
-		if val, ok := src.Tags[define.TAG_PROJ_EPISODE]; ok {
-			key += val + "--"
-		}
-		key += src.Tags[define.TAG_PROJ_BASE]
+		// key := src.Tags[define.TAG_PROJ_TYPE] + "--"
+		// if val, ok := src.Tags[define.TAG_PROJ_EPISODE]; ok {
+		// 	key += val + "--"
+		// }
+		// key += src.Tags[define.TAG_PROJ_BASE]
+		key := src.Key()
 		output[key] = append(output[key], src)
 	}
 	return output
+}
+
+func ProcessType(projData []*Sourcefile) string {
+	if len(projData) < 1 {
+		return ""
+	}
+	etalon := projData[0].Tags[define.TAG_PROJ_TYPE]
+	for _, data := range projData {
+		if data.Tags[define.TAG_PROJ_TYPE] != etalon {
+			return ""
+		}
+	}
+	return etalon
 }
 
 func appendUnique(sl []string, str string) []string {
@@ -149,4 +164,14 @@ func appendUnique(sl []string, str string) []string {
 	}
 	sl = append(sl, str)
 	return sl
+}
+
+func (src *Sourcefile) Key() string {
+	base := src.Tags[define.TAG_PROJ_BASE]
+	switch src.Tags[define.TAG_PROJ_TYPE] {
+	case define.PROJ_TYPE_SER:
+		season := src.Tags[define.TAG_PROJ_SEASON]
+		base = base + "_" + strings.TrimPrefix(season, "s")
+	}
+	return base
 }
