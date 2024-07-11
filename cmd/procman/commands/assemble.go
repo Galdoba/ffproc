@@ -10,10 +10,10 @@ import (
 	"github.com/Galdoba/ffproc/configs"
 	"github.com/Galdoba/ffproc/db/spreadsheet"
 	"github.com/Galdoba/ffproc/internal/bridge"
-	"github.com/Galdoba/ffproc/internal/pkg/process"
 	"github.com/Galdoba/ffproc/internal/pkg/sourcefiles"
 	"github.com/Galdoba/ffproc/internal/pkg/table"
 	"github.com/Galdoba/ffproc/internal/pkg/ticket"
+	"github.com/Galdoba/ffproc/internal/process"
 	"github.com/Galdoba/ffproc/pkg/survey"
 	"github.com/urfave/cli/v2"
 )

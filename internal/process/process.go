@@ -15,7 +15,7 @@ type Project struct {
 	Key    string
 	Ticket *ticket.Ticket
 	Data   bridge.Bridge
-	Path   string
+	//Path   string
 }
 
 type Process struct {
@@ -58,7 +58,7 @@ func (pr *Process) AddProject(tk *ticket.Ticket, data *bridge.Bridge, path strin
 		Key:    data.Key,
 		Ticket: tk,
 		Data:   *data,
-		Path:   path,
+		//Path:   path,
 	})
 	return nil
 }
@@ -74,7 +74,7 @@ func appendUnique(slice []string, element string) []string {
 	return slice
 }
 
-//////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////
 func scanBasicData(src *sourcefiles.Sourcefile) string {
 	cmnd, _ := command.New(
 		command.CommandLineArguments("mfline", fmt.Sprintf("show -l %v", src.Dir+src.Name)),
