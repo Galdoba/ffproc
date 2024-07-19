@@ -126,7 +126,7 @@ func CompileTableData(dt Data) (*TableData, error) {
 		switch entry.ProcessType {
 		case "SER":
 			entry.ProcessDestination = "[EDIT]/" + destinationSerial(entry)
-		case "FLM":
+		case "FILM":
 			entry.ProcessDestination = "[EDIT]/" + destinationFilm(entry)
 		}
 		entry.ID = entry.ProcessType + ":" + entry.ID
@@ -140,7 +140,7 @@ func processTypeOf(entry Entry) string {
 	if strings.Contains(keytr, "_sezon") {
 		return "SER"
 	}
-	return "FLM"
+	return "FILM"
 }
 
 func seasonOf(entry Entry) string {

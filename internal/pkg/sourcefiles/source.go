@@ -175,3 +175,14 @@ func (src *Sourcefile) Key() string {
 	}
 	return base
 }
+
+func (src *Sourcefile) EpisodeTag() string {
+	episode := ""
+	switch src.Tags[define.TAG_PROJ_TYPE] {
+	case define.PROJ_TYPE_SER:
+		if ep, ok := src.Tags[define.TAG_PROJ_EPISODE]; ok {
+			episode = ep
+		}
+	}
+	return episode
+}

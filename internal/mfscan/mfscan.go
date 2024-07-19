@@ -12,6 +12,10 @@ const (
 	ScanBasic     = "basic"
 	ScanInterlace = "interlace"
 	ScanSilence   = "silence"
+	stVideo       = "video"
+	stAudio       = "audio"
+	stSubs        = "subtitle"
+	tagLanguage   = "language"
 )
 
 func NewProfile() *mfscanInfo {
@@ -145,27 +149,66 @@ type Side_data_list_struct struct {
 
 func (si *mfscanInfo) Size() []string {
 	sizes := []string{}
-	for i, stream := range si.Streams {
-		fmt.Printf("stream %v: codec type %v\n", i, stream.Codec_type)
-		if stream.Codec_type != "video" {
-			fmt.Printf("skip %v: codec type %v\n", i, stream.Codec_type)
+	for _, stream := range si.Streams {
+		if stream.Codec_type != stVideo {
 			continue
 		}
-		fmt.Println(stream.Width, stream.Height)
 		sizes = append(sizes, fmt.Sprintf("%vx%v", stream.Width, stream.Height))
 	}
 	return sizes
 }
 
-func (si *mfscanInfo) Channels() []string {
-	sizes := []string{}
-	for i, stream := range si.Streams {
-		fmt.Printf("stream %v: codec type %v\n", i, stream.Codec_type)
-		if stream.Codec_type != "video" {
-			fmt.Printf("skip %v: codec type %v\n", i, stream.Codec_type)
+func (si *mfscanInfo) Fps() []string {
+	fps := []string{}
+	for _, stream := range si.Streams {
+		if stream.Codec_type != stVideo {
 			continue
 		}
-		sizes = append(sizes, fmt.Sprintf("%vx%v", stream.Width, stream.Height))
+		fps = append(fps, stream.Avg_frame_rate)
 	}
-	return sizes
+	return fps
+}
+
+func (si *mfscanInfo) Channels() []int {
+	channels := []int{}
+	for _, stream := range si.Streams {
+		if stream.Codec_type != stAudio {
+			continue
+		}
+		channels = append(channels, stream.Channels)
+	}
+	return channels
+}
+
+func (si *mfscanInfo) Layout() []string {
+	layout := []string{}
+	for _, stream := range si.Streams {
+		if stream.Codec_type != stAudio {
+			continue
+		}
+		layout = append(layout, stream.Channel_layout)
+	}
+	return layout
+}
+
+func (si *mfscanInfo) Langs() []string {
+	layout := []string{}
+	for _, stream := range si.Streams {
+		if stream.Codec_type != stAudio {
+			continue
+		}
+		layout = append(layout, stream.Tags[tagLanguage])
+	}
+	return layout
+}
+
+func (si *mfscanInfo) StreamTypes() []string {
+	strms := []string{}
+	for _, stream := range si.Streams {
+		switch stream.Codec_type {
+		case stVideo, stAudio, stSubs:
+			strms = append(strms, stream.Codec_type)
+		}
+	}
+	return strms
 }
