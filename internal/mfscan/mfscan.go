@@ -212,3 +212,22 @@ func (si *mfscanInfo) StreamTypes() []string {
 	}
 	return strms
 }
+
+func (si *mfscanInfo) MapStreams() map[string]*Stream {
+	streamMap := make(map[string]*Stream)
+	vn, an, sn := 0, 0, 0
+	for _, stream := range si.Streams {
+		switch stream.Codec_type {
+		case stVideo:
+			streamMap[fmt.Sprintf(":v:%v", vn)] = stream
+			vn++
+		case stAudio:
+			streamMap[fmt.Sprintf(":a:%v", an)] = stream
+			an++
+		case stSubs:
+			streamMap[fmt.Sprintf(":s:%v", sn)] = stream
+			sn++
+		}
+	}
+	return streamMap
+}

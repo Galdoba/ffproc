@@ -103,9 +103,9 @@ func (pr *Process) Run(cfg *configs.Procman) error {
 		fmt.Printf("start project %v/%v (%v)\n", pNum+1, totalProjects, tk.Name)
 
 		for _, sources := range project.Data.TableSourceMap {
-			srcNum := len(sources)
-			for sNum, src := range sources {
-				fmt.Printf("import source %v/%v (%v)\n", sNum+1, srcNum, src.Name)
+			//srcNum := len(sources)
+			for _, src := range sources {
+				//fmt.Printf("import source %v/%v (%v)\n", sNum+1, srcNum, src.Name)
 				if err := project.ImportStreamData(src); err != nil {
 					fmt.Println("source importing failed:", err.Error())
 				}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/Galdoba/ffproc/internal/pkg/define"
@@ -185,4 +186,32 @@ func (src *Sourcefile) EpisodeTag() string {
 		}
 	}
 	return episode
+}
+
+func SortedByEpisode(sources []*Sourcefile) [][]*Sourcefile {
+	eps := []string{}
+	srcNames := []string{}
+	for _, src := range sources {
+		eps = appendUnique(eps, src.EpisodeTag())
+		srcNames = append(srcNames, src.Name)
+	}
+	sort.Strings(eps)
+	sort.Strings(srcNames)
+	sortedSrcs := [][]*Sourcefile{}
+
+	for _, ep := range eps {
+		localN := 0
+
+		namedSrc := []*Sourcefile{}
+		for _, src := range sources {
+			if ep == src.EpisodeTag() {
+				namedSrc = append(namedSrc, src)
+				localN++
+			}
+
+		}
+		sortedSrcs = append(sortedSrcs, namedSrc)
+
+	}
+	return sortedSrcs
 }
